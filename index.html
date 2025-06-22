@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>FontBurst</title>
+  <!-- Update Adobe Fonts kit -->
+  <link rel="stylesheet" href="https://use.typekit.net/ccr3hfi.css">
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #cbcbcb;  /* white color */
+      cursor: none;  /* This hides the default cursor */
+    }
+    canvas {
+      display: block;
+      cursor: pointer;  /* This sets the canvas cursor - try different values */
+    }
+    .logo-container {
+      position: fixed;
+      top: 40%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 300px;
+      height: 300px;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-decoration: none !important;
+    }
+    .logo-container video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    .click-text {
+      font-family: "Ohm-bold", sans-serif;
+      color: rgb(0, 0, 0);
+      font-size: 20px;
+      margin-top: 10px;
+      text-align: center;
+      font-weight: 900;
+      text-transform: uppercase; 
+      letter-spacing: 5px;
+      text-decoration: none !important;
+
+    }
+        /* Remove old GIF styles */
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/p5@1.9.0/lib/p5.min.js"></script>
+  <script>
+    // Video control functionality
+    document.addEventListener('DOMContentLoaded', function() {
+      const video = document.querySelector('.logo-video');
+      const container = document.querySelector('.logo-container');
+      
+      container.addEventListener('mouseenter', function() {
+        video.currentTime = 0; // Reset to start
+        video.play();
+      });
+      
+      container.addEventListener('mouseleave', function() {
+        video.pause();
+        video.currentTime = 0; // Reset to first frame
+      });
+    });
+  </script>
+</head>
+<body>
+  <script>
+    let particles = [];
+    let artLetters = ['A', 'R', 'T'];
+    let artIndex = 0;
+    let previewLetter = null;
+    let previewX = 0;
+    let previewY = 0;
+
+    function setup() {
+      createCanvas(windowWidth, windowHeight);
+      colorMode(HSB, 255);
+      textAlign(CENTER, CENTER);
+      textSize(72);
+      textFont("ohm-bold"); // Use "ohm" as the font-family
+    }
+
+    function draw() {
+      background('#cbcbcb');
+
+      for (let i = 0; i < particles.length; i++) {
+        particles[i].update();
+        particles[i].display();
+      }
+
+      // Draw preview letter
+      if (isDragging && previewLetter) {
+        push();
+        translate(previewX, previewY);
+        fill(180, 128, 213); // or any color you like
+        textSize(100); // or your preferred preview size
+        textFont("ohm-bold");
+        text(previewLetter, 0, 0);
+        pop();
+      }
+    }
+
+    let isDragging = false;
+    let dragStart = {x: 0, y: 0};
+    let dragEnd = {x: 0, y: 0};
+
+    function mousePressed() {
+      isDragging = true;
+      dragStart.x = mouseX;
+      dragStart.y = mouseY;
+      previewLetter = artLetters[artIndex];
+      previewX = mouseX;
+      previewY = mouseY;
+    }
+
+    function mouseReleased() {
+      if (isDragging) {
+        dragEnd.x = mouseX;
+        dragEnd.y = mouseY;
+        let vx = (dragEnd.x - dragStart.x) * 0.1;
+        let vy = (dragEnd.y - dragStart.y) * 0.1;
+        let letter = artLetters[artIndex];
+        particles.push(new LetterParticle(mouseX, mouseY, letter, vx, vy));
+        artIndex = (artIndex + 1) % artLetters.length;
+        isDragging = false;
+        previewLetter = null;
+      }
+    }
+
+    function mouseDragged() {
+      if (isDragging && previewLetter) {
+        previewX = mouseX;
+        previewY = mouseY;
+      }
+    }
+
+    class LetterParticle {
+      constructor(x, y, letter, vx = random(-1.25, 1.25), vy = random(-.75, -.5)) {
+        this.x = x;
+        this.y = y;
+        this.vx = vx;
+        this.vy = vy;
+        this.gravity = 0.06;
+        this.size = random(80, 120); // Adjust for letter size
+        this.hue = random(128, 213);
+        this.rotation = random(TWO_PI);
+        this.landed = false;
+        this.bounces = 0;
+        this.maxBounces = 3;
+        this.bounceDamping = 0.3;
+        this.letter = letter;
+      }
+
+      update() {
+        if (!this.landed) {
+          this.x += this.vx;
+          this.y += this.vy;
+          this.vy += this.gravity;
+
+          // Floor bounce
+          if (this.y + this.size / 2 >= height) {
+            this.y = height - this.size / 2;
+            if (this.bounces < this.maxBounces) {
+              this.vy = -abs(this.vy) * this.bounceDamping;
+              this.bounces++;
+            } else {
+              this.vx = 0;
+              this.vy = 0;
+              this.landed = true;
+            }
+          }
+
+          // Roof bounce
+          if (this.y - this.size / 2 <= 0) {
+            this.y = this.size / 2;
+            this.vy = abs(this.vy) * this.bounceDamping;
+          }
+
+          // Left wall bounce
+          if (this.x - this.size / 2 <= 0) {
+            this.x = this.size / 2;
+            this.vx = abs(this.vx) * this.bounceDamping;
+          }
+
+          // Right wall bounce
+          if (this.x + this.size / 2 >= width) {
+            this.x = width - this.size / 2;
+            this.vx = -abs(this.vx) * this.bounceDamping;
+          }
+
+          this.rotation += 0.03;
+        }
+      }
+
+      display() {
+        push();
+        translate(this.x, this.y);
+        rotate(this.rotation);
+        noStroke();
+        fill(this.hue, 128, 213);
+        textSize(this.size);
+        textFont("ohm-bold"); // Use "ohm" as the font-family
+        text(this.letter, 0, 0);
+        pop();
+      }
+    }
+  </script>
+</body>
+</html>
