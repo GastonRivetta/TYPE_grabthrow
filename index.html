@@ -2,19 +2,20 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>FontBurst</title>
+  <title>Creative Code</title>
   <!-- Update Adobe Fonts kit -->
   <link rel="stylesheet" href="https://use.typekit.net/ccr3hfi.css">
   <style>
     body {
       margin: 0;
       overflow: hidden;
-      background: #cbcbcb;  /* white color */
+      background: #242424;  /* white color */
       cursor: none;  /* This hides the default cursor */
     }
     canvas {
       display: block;
-      cursor: pointer;  /* This sets the canvas cursor - try different values */
+      cursor: pointer;
+      border-radius: 32px; /* Adjust the px value for more/less rounding */
     }
     .logo-container {
       position: fixed;
@@ -78,7 +79,12 @@
     let previewY = 0;
 
     function setup() {
-      createCanvas(windowWidth, windowHeight);
+      let cnv = createCanvas(600, 600); // Set your desired width and height
+      // Center the canvas in the window
+      cnv.position(
+        (windowWidth - width) / 2,
+        (windowHeight - height) / 2
+      );
       colorMode(HSB, 255);
       textAlign(CENTER, CENTER);
       textSize(72);
@@ -87,6 +93,15 @@
 
     function draw() {
       background('#cbcbcb');
+
+      // Draw background instruction text
+      push();
+      fill(180, 20, 80, 60); // Soft color, semi-transparent
+      textAlign(CENTER, CENTER);
+      textSize(40);
+      textFont("ohm-bold");
+      text("Click and throw!", width / 2, height / 2);
+      pop();
 
       for (let i = 0; i < particles.length; i++) {
         particles[i].update();
@@ -97,8 +112,8 @@
       if (isDragging && previewLetter) {
         push();
         translate(previewX, previewY);
-        fill(180, 128, 213); // or any color you like
-        textSize(100); // or your preferred preview size
+        fill(180, 128, 213);
+        textSize(100);
         textFont("ohm-bold");
         text(previewLetter, 0, 0);
         pop();
@@ -145,14 +160,14 @@
         this.y = y;
         this.vx = vx;
         this.vy = vy;
-        this.gravity = 0.06;
+        this.gravity = 0.04;
         this.size = random(80, 120); // Adjust for letter size
         this.hue = random(128, 213);
         this.rotation = random(TWO_PI);
         this.landed = false;
         this.bounces = 0;
-        this.maxBounces = 3;
-        this.bounceDamping = 0.3;
+        this.maxBounces = 10;
+        this.bounceDamping = 0.2;
         this.letter = letter;
       }
 
@@ -209,6 +224,13 @@
         pop();
       }
     }
+
+    function windowResized() {
+      let cnv = document.querySelector('canvas');
+      cnv.style.position = 'absolute';
+      cnv.style.left = (window.innerWidth - width) / 2 + 'px';
+      cnv.style.top = (window.innerHeight - height) / 2 + 'px';
+    }
   </script>
-</body>
+</html>
 </html>
